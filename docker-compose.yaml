@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15.1
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=YgHfxZ(q
+      - POSTGRES_DB=english_buddy_bot_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tg_user -d english_buddy_bot_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  english_buddy_bot:
+    build: .
+    image: olegkosarev/english_buddy_bot:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    command: python bot_logic.py
+  export_data:
+    build: .
+    image: olegkosarev/english_buddy_bot:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    command: python google_sheets_export.py
